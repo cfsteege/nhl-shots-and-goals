@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+<script src="https://d3js.org/d3-contour.v1.min.js"></script>
+<style>
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+  }
+
+  header {
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    background-color: #333;
+    color: #fff;
+    font-size: 1.5em;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+  }
+
+  .main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .controls-panel {
+    width: 300px;
+    height: calc(100vh - 60px);
+    /* Full viewport height minus header */
+    padding: 15px;
+    box-sizing: border-box;
+    border-right: 1px solid #ccc;
+    background-color: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-controls {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #game-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background-color: #fff;
+    max-height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: #e0e0e0 #fff;
+  }
+
+  .game-element {
+    background-color: #fff;
+    cursor: pointer;
+    color: #333;
+    padding: 0 10px;
+  }
+
+  .game-element:hover {
+    background-color: #f0f8ff;
+  }
+
+  .game-list-text {
+    padding: 8px;
+  }
+
+  .plot-panel {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    padding: 10px 20px 20px 10px;
+    overflow: hidden;
+  }
+
+  .label {
+    font-weight: bold;
+    margin: 8px 0;
+  }
+
+  input[type="text"],
+  input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  select {
+    padding: 8px;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .tooltip {
+    position: absolute;
+    text-align: left;
+    padding: 5px;
+    font-size: 14px;
+    background: aliceblue;
+    border: 1px solid gray;
+    border-radius: 5px;
+    visibility: hidden;
+    font-family: Arial, sans-serif;
+  }
+
+  .tab-container {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+    color: #333;
+    background-color: #e0e0e0;
+  }
+  
+  .tab.active {
+    background-color: #fff;
+    border-bottom: 2px solid #333;
+  }
+  
+  .hidden {
+    display: none;
+  }
+
+  button {
+    padding: 8px 12px;
+    margin: 8px 0;
+    font-size: 14px;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: white;
+  }
+
+  button.active {
+    background-color: #007acc;
+    color: white;
+  }
+
+</style>
+
+<body>
+  <script src="script.js?v=1.2"></script>
+  <header>NHL Shots and Goals - 2023-2024 Season</header>
+  <div class="main-content">
+    <div class="controls-panel">
+      <!-- Tabs for switching between Game and Season -->
+      <div class="tab-container">
+        <div id="game-tab" class="tab active">Single Game</div>
+        <div id="season-tab" class="tab">Entire Season</div>
+      </div>
+
+      <!-- Individual Game Controls -->
+      <div id="game-controls" class="filter-controls">
+        <label class="label" for="game-team-select">Select Team:</label>
+        <select id="game-team-select">
+          <option value="">Select a team</option>
+        </select>
+
+        <label class="label" for="start-date">Start Date:</label>
+        <input type="date" id="start-date" min="2023-09-23" max="2024-06-24">
+
+        <label class="label" for="end-date">End Date:</label>
+        <input type="date" id="end-date" min="2023-09-23" max="2024-06-24">
+
+        <div class="label">Games:</div>
+        <div id="game-list"><div class="game-list-text">Select a team.</div></div>
+      </div>
+
+      <!-- Season Controls -->
+      <div id="season-controls" class="filter-controls hidden">
+        <div class="display: flex; gap: 40px">
+          <button id="goals-btn">Goals</button>
+          <button id="shots-btn" class="active">Shots</button>
+        </div>
+        <label class="label" for="season-team-select">Select Team:</label>
+        <select style="margin-bottom: 10px;" id="season-team-select">
+          <option value="">All Teams</option>
+        </select>
+        <label class="label" id="player-select-label">Select Position:</label>
+        <select id="player-type-select">
+          <option value="">All Positions</option>
+          <option value="CLR">Forwards</option>
+          <option value="D">Defensemen</option>
+          <option value="C">Centers</option>
+          <option value="LR">Wingers</option>
+        </select>
+        <select id="season-player-select">
+          <option value="">All Players</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Game Plot Panel -->
+    <div id="game-plot-panel" class="plot-panel">
+      <h3 id="game-header" class="label" style="margin-bottom: 0;">No Game Selected</h3>
+      <div style="display: flex; margin-bottom: 10px; gap: 20px">
+        <div style="display: flex; flex-direction: column;">
+          <label for="playerFilter" class="label">Filter by Player:</label>
+          <select id="playerFilter">
+            <option value="">All Players</option>
+          </select>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <label for="periodFilter" class="label">Filter by Period:</label>
+          <select id="periodFilter">
+            <option value="">All Periods</option>
+          </select>
+        </div>
+      </div>
+      <div id="game-d3-plot"></div>
+      <div id="game-tooltip" class="tooltip"></div>
+    </div>
+
+    <!-- Season Plot Panel -->
+    <div id="season-plot-panel" class="plot-panel hidden">
+      <h3 id="season-header" class="label">Entire League Shots</h3>
+      <div id="season-d3-plot"></div>
+      <div id="season-tooltip" class="tooltip"></div>
+    </div>
+  </div>
+</body>
+</html>
