@@ -514,7 +514,7 @@ function plotSeasonData(events) {
     .x(event => x(event.details.xCoord))
     .y(event => y(event.details.yCoord))
     .size([plotWidth, plotHeight])
-    .bandwidth(6)
+    .bandwidth(8)
     (filteredEvents)
 
   // Get max and min density data
